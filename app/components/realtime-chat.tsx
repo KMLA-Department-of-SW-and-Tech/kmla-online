@@ -5,7 +5,7 @@ import { type ChatMessage, useRealtimeChat } from "~/hooks/use-realtime-chat";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Send } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 interface RealtimeChatProps {
   roomName: string;
@@ -29,6 +29,7 @@ export const RealtimeChat = ({
   messages: initialMessages = [],
 }: RealtimeChatProps) => {
   const { containerRef, scrollToBottom } = useChatScroll();
+  const hasScrolledRef = useRef(false);
 
   const {
     messages: realtimeMessages,
@@ -63,8 +64,11 @@ export const RealtimeChat = ({
   }, [allMessages, onMessage]);
 
   useEffect(() => {
-    // Scroll to bottom whenever messages change
-    scrollToBottom();
+    if (allMessages.length > 0 && !hasScrolledRef.current) {
+      scrollToBottom("instant");
+      hasScrolledRef.current = true;
+    }
+    console.log("Scrolled to bottom");
   }, [allMessages, scrollToBottom]);
 
   const handleSendMessage = useCallback(
@@ -129,7 +133,7 @@ export const RealtimeChat = ({
 
       <form
         onSubmit={handleSendMessage}
-        className="flex w-full gap-2 border-t border-border p-4"
+        className="flex w-full bg-background sticky bottom-0 z-10 gap-2 border-t border-border p-4"
       >
         <Input
           className={cn(
