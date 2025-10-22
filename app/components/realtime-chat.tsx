@@ -140,11 +140,6 @@ export const RealtimeChat = ({
         className="flex w-full bg-background sticky bottom-0 z-10 gap-2 border-t border-border p-4"
       >
         <div className="relative">
-          <Input
-            type="file"
-            onChange={(e) => setAttachment(e.target.files?.[0] || null)}
-            className="hidden"
-          />
           <IconFileInput
             onChange={(e) => setAttachment(e.target.files?.[0] || null)}
             className="bg-[#3BBE95] rounded-full w-9 flex items-center justify-center"
