@@ -8,6 +8,7 @@ import supabase from "~/lib/supabase/client";
 // TODO: language support, dark mode support
 // TODO: edit message, delete message 기능 추가
 // TODO: initial scroll to bottom이 끝까지 안 내려감. realtime-chat Form element에 sticky 때문인 듯
+// TODO: attachment ui 결정 (미리보기, 한 번에 몇개, 페메처럼 각각을 하나의 메세지로 취급할지 등)
 // NOTE: shadcn realtimechat ui가 처음에 로딩할 때 인풋 로딩하는 시간이 너무 오래 걸리는데 왜 그런지 모르겠음
 // NOTE: 나중에 디자인 바꿔야 할 때 shadcn components 코드랑 app.css 참고해서 바꾸기
 

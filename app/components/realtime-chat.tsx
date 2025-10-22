@@ -6,6 +6,7 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Send } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import IconFileInput from "./icon-file-input";
 
 interface RealtimeChatProps {
   roomName: string;
@@ -40,6 +41,7 @@ export const RealtimeChat = ({
     username,
   });
   const [newMessage, setNewMessage] = useState("");
+  const [attachment, setAttachment] = useState<File | null>(null);
 
   // Merge realtime messages with initial messages
   const allMessages = useMemo(() => {
@@ -76,10 +78,12 @@ export const RealtimeChat = ({
       e.preventDefault();
       if (!newMessage.trim() || !isConnected) return;
 
-      sendMessage(newMessage);
       setNewMessage("");
+      setAttachment(null);
+      sendMessage(newMessage, attachment);
+      scrollToBottom("instant");
     },
-    [newMessage, isConnected, sendMessage]
+    [newMessage, isConnected, sendMessage, attachment]
   );
 
   return (
@@ -135,6 +139,33 @@ export const RealtimeChat = ({
         onSubmit={handleSendMessage}
         className="flex w-full bg-background sticky bottom-0 z-10 gap-2 border-t border-border p-4"
       >
+        <div className="relative">
+          <Input
+            type="file"
+            onChange={(e) => setAttachment(e.target.files?.[0] || null)}
+            className="hidden"
+          />
+          <IconFileInput
+            onChange={(e) => setAttachment(e.target.files?.[0] || null)}
+            className="bg-[#3BBE95] rounded-full w-9 flex items-center justify-center"
+          >
+            <svg
+              width="19"
+              height="19"
+              viewBox="0 0 19 19"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M8.73425 18.3451V10.3451H0.734253V8.34509H8.73425V0.345093H10.7343V8.34509H18.7343V10.3451H10.7343V18.3451H8.73425Z"
+                fill="#ffffff"
+              />
+            </svg>
+          </IconFileInput>
+          {attachment && (
+            <div className="absolute top-[1px] right-[1px] bg-orange-600 text-white rounded-full w-2 h-2"></div>
+          )}
+        </div>
         <Input
           className={cn(
             "rounded-full bg-background text-sm transition-all duration-300",

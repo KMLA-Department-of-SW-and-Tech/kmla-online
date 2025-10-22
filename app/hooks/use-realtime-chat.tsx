@@ -1,6 +1,5 @@
 "use client";
 
-import { createClient } from "~/lib/supabase/client";
 import { useCallback, useEffect, useState } from "react";
 import supabase from "~/lib/supabase/client";
 import type { RealtimePostgresChangesPayload } from "@supabase/realtime-js/dist/module/RealtimeChannel";
@@ -13,6 +12,7 @@ interface UseRealtimeChatProps {
 export interface ChatMessage {
   id: string;
   content: string;
+  attachmentUrl?: string;
   user: {
     name: string;
     avatarUrl?: string;
@@ -89,14 +89,16 @@ export function useRealtimeChat({ roomName, username }: UseRealtimeChatProps) {
   }, [roomName, username, supabase]);
 
   const sendMessage = useCallback(
-    async (content: string) => {
+    async (content: string, attachment: File | null) => {
       if (!channel || !isConnected) return;
 
+      const attachmentUrl = `${roomName}/${attachment?.name}`;
       const message = {
         content,
         user: {
           name: username,
         },
+        ...(attachment && { attachmentUrl }),
       };
 
       const currentMessage = {
@@ -106,12 +108,16 @@ export function useRealtimeChat({ roomName, username }: UseRealtimeChatProps) {
       };
 
       // Update local state immediately for the sender
+      // currentMessage의 id랑 supabase에서 생성된 id랑 달라서 같은 메시지가 중복으로 보이는 현상 발생해서 주석 처리함
+      // TODO: immediate local state update하면서도 중복 문제 해결하기
       // setMessages((current) => [...current, currentMessage]);
 
-      const { data, error } = await supabase.from("messages").insert(message);
-      if (error) {
-        console.error("Error saving message to database:", error);
-      }
+      await supabase.from("messages").insert(message);
+
+      if (attachment)
+        await supabase.storage
+          .from("chat-message-attachments")
+          .upload(attachmentUrl, attachment);
 
       await channel.send({
         type: "broadcast",

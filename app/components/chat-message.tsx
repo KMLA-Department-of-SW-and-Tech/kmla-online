@@ -71,6 +71,7 @@ export const ChatMessageItem = ({
             onPointerUp={handlePointerUp}
           >
             {message.content}
+            {message.attachmentUrl && "\nattachment: " + message.attachmentUrl}
           </div>
         </div>
       </div>
