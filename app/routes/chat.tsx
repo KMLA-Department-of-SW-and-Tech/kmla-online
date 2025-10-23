@@ -1,6 +1,5 @@
 import { Link } from "react-router";
 import { RealtimeChat } from "~/components/realtime-chat";
-import supabase from "~/lib/supabase/client";
 
 // TODO: 언제 보낸 시간 뜨게 할지 결하기
 // TODO: icon, bg color 등 디자인 통일하기
@@ -10,7 +9,7 @@ import supabase from "~/lib/supabase/client";
 // TODO: initial scroll to bottom이 끝까지 안 내려감. realtime-chat Form element에 sticky 때문인 듯
 // TODO: attachment ui 결정 (미리보기, 한 번에 몇개, 페메처럼 각각을 하나의 메세지로 취급할지 등)
 // TODO: html input과 이를 이용하는 shadcn Input은 line break (\n)을 지원하지 않기에 textarea를 이용해서 바꿔야 함
-// NOTE: shadcn realtimechat ui가 처음에 로딩할 때 인풋 로딩하는 시간이 너무 오래 걸리는데 왜 그런지 모르겠음
+// NOTE: shadcn realtime chat ui가 처음에 로딩할 때 인풋 로딩하는 시간이 너무 오래 걸리는데 왜 그런지 모르겠음
 // NOTE: 나중에 디자인 바꿔야 할 때 shadcn components 코드랑 app.css 참고해서 바꾸기
 
 export default function ChatPage() {
