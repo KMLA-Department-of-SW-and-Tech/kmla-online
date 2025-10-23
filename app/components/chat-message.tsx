@@ -2,6 +2,7 @@ import { cn } from "~/lib/utils";
 import type { ChatMessage } from "~/hooks/use-realtime-chat";
 import { useState } from "react";
 
+// TODO: chat message rounding figma랑 맞추기
 interface ChatMessageItemProps {
   message: ChatMessage;
   isOwnMessage: boolean;
