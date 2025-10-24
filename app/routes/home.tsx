@@ -1,5 +1,6 @@
 import type { Route } from "./+types/home";
 import { Welcome } from "../welcome/welcome";
+import Card from "~/components/ui/card";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -24,15 +25,16 @@ export default function Home() {
         <div>홈페이지</div>
         <div>도서관</div>
         <div>신청현황</div>
+        <div>기상송</div>
       </div>
       <div>
-        <div>notification1</div>
-        <div>notification2</div>
+        <Card>notification1</Card>
+        <Card>notification2</Card>
         <div>nav</div>
       </div>
       <div>
         <div>즐겨찾기</div>
-        <div>더보기{">"}</div>
+        <Card>더보기{">"}</Card>
       </div>
       <div>
         <div>boards</div>
@@ -47,9 +49,9 @@ export default function Home() {
         <div>스터디그룹</div>
       </div>
       <div>
-        <div>post1</div>
-        <div>post2</div>
-        <div>post3</div>
+        <Card>post1</Card>
+        <Card>post2</Card>
+        <Card>post3</Card>
       </div>
     </div>
   );
