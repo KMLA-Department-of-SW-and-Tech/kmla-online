@@ -13,8 +13,10 @@ export default function NavigationBar({
   const { newPost, newChatCount } = loaderData;
   return (
     <div className="h-screen bg-background">
-      <Outlet />
-      <nav className="flex fixed bg-white w-screen bottom-0 justify-around py-4">
+      <div className="h-[calc(100dvh-60px)] mb-[60px] overflow-y-auto overflow-x-hidden">
+        <Outlet />
+      </div>
+      <nav className="flex fixed bg-white w-full bottom-0 justify-around py-4">
         <NavLink to="/" className="w-7 h-7" end>
           {({ isActive }) =>
             isActive ? (
@@ -49,7 +51,7 @@ export default function NavigationBar({
             )
           }
         </NavLink>
-        <NavLink to="/board" className="w-7 h-7 relative">
+        <NavLink to="/boards" className="w-7 h-7 relative">
           {({ isActive }) => (
             <>
               <img
