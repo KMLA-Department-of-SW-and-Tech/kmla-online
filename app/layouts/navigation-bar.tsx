@@ -11,8 +11,6 @@ export default function NavigationBar({
   loaderData,
 }: Readonly<Route.ComponentProps>) {
   const { newPost, newChatCount } = loaderData;
-  console.log(newPost);
-  console.log(newChatCount);
   return (
     <div className="h-screen bg-background">
       <Outlet />
