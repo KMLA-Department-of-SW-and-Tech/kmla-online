@@ -6,8 +6,5 @@ import {
 } from "@react-router/dev/routes";
 
 export default [
-  layout("layouts/navigation-bar.tsx", [
-    index("routes/home.tsx"),
-    route("/playground", "routes/playground.tsx"),
-  ]),
+  layout("layouts/layout-main.tsx", [index("routes/home.tsx")]),
 ] satisfies RouteConfig;
