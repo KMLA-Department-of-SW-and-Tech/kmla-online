@@ -1,3 +1,6 @@
-import { index } from "@react-router/dev/routes";
-
-export default [index("routes/home.jsx")];
+import { index, route } from "@react-router/dev/routes";
+ 
+export default [
+  index("routes/home.jsx"),
+  route("post", "routes/post.jsx"),
+];
