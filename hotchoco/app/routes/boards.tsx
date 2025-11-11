@@ -1,9 +1,9 @@
 import { Link } from "react-router";
 import type { ReactNode } from "react";
 import type { Route } from "./+types/boards";
-import { BoardsStyles } from "./boards-styles";
 
-// Styles are inlined via <BoardsStyles />
+const containerClass = "mx-auto w-full max-w-[430px] px-4 sm:px-6";
+
 export const links: Route.LinksFunction = () => [];
 
 export function meta() {
@@ -26,66 +26,75 @@ export default function BoardsPage() {
   const favorites = ["자유게시판", "익명게시판", "질문게시판", "자료공유게시판"];
 
   return (
-    <div className="boards">
-      <BoardsStyles />
-      <header className="boards-header">
-        <div className="container header-row">
-          <Link to="/" aria-label="뒤로" className="back-btn">
+    <div className="min-h-[100svh] bg-white text-[#111827]">
+      <header className="sticky top-0 z-10 border-b border-gray-200 bg-white/95 backdrop-blur-md">
+        <div className={`${containerClass} flex items-center gap-3 py-3`}>
+          <Link to="/" aria-label="뒤로" className="-ml-1 p-1 text-inherit">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path d="M15 6L9 12L15 18" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </Link>
-          <h1 className="title">게시판</h1>
+          <h1 className="text-2xl font-bold">게시판</h1>
         </div>
-        <div className="container filters-row">
-          <div className="chips">
-            <button className="chip chip--primary">메뉴</button>
-            <button className="chip chip--outline">최신순</button>
+        <div className={`${containerClass} flex items-center gap-2 pb-3 pt-1`}>
+          <div className="flex gap-2">
+            <button type="button" className="rounded-full border border-transparent bg-[#10c1a5] px-3 py-1.5 text-[13px] font-semibold text-white">메뉴</button>
+            <button type="button" className="rounded-full border border-gray-300 bg-white px-3 py-1.5 text-[13px] font-semibold text-[#111827]">최신순</button>
           </div>
-          <Link to="/boards/request" className="request-link">게시판 개설요청 &gt;</Link>
+          <Link to="/boards/request" className="ml-auto text-sm text-[#6b7280] transition hover:text-[#111827]">
+            게시판 개설요청 &gt;
+          </Link>
         </div>
       </header>
 
-      <main className="container main">
-        <section className="section">
-          <h2 className="section-title">학생 공지</h2>
-          <div className="columns">
-            <ul className="col col--left">
+      <main className={`${containerClass} pb-24 pt-4`}>
+        <section className="mb-4">
+          <h2 className="mb-3 text-[22px] font-bold leading-tight">학생 공지</h2>
+          <div className="grid grid-cols-2 items-start gap-x-6">
+            <ul className="grid list-none gap-y-3 p-0">
               {noticesLeft.map((name) => (
-                <li key={name}>
-                  <Link className="item" to={`/boards/${encodeURIComponent(name)}`}>{name}</Link>
+                <li key={name} className="flex h-8 items-center">
+                  <Link className="block truncate text-[15px] text-[#111827] hover:underline" to={`/boards/${encodeURIComponent(name)}`}>
+                    {name}
+                  </Link>
                 </li>
               ))}
             </ul>
-            <ul className="col col--right">
+            <ul className="grid list-none gap-y-3 p-0">
               {noticesRight.map((name) => (
-                <li key={name}>
-                  <Link className="item" to={`/boards/${encodeURIComponent(name)}`}>{name}</Link>
+                <li key={name} className="flex h-8 items-center">
+                  <Link className="block truncate text-[15px] text-[#111827] hover:underline" to={`/boards/${encodeURIComponent(name)}`}>
+                    {name}
+                  </Link>
                 </li>
               ))}
             </ul>
           </div>
         </section>
 
-        <hr className="divider" />
+        <hr className="my-6 h-px border-0 bg-gray-200" />
 
-        <section className="section">
-          <div className="section-header">
-            <h2 className="section-title">즐겨찾는 게시판</h2>
-            <Link to="#" className="more">더보기 ▸</Link>
+        <section className="mb-4">
+          <div className="flex items-center">
+            <h2 className="text-[22px] font-bold leading-tight">즐겨찾는 게시판</h2>
+            <Link to="#" className="ml-auto text-sm text-gray-500 transition hover:text-[#111827]">
+              더보기 ▸
+            </Link>
           </div>
-          <ul className="fav-list">
+          <ul className="mt-3 grid list-none gap-y-3 p-0 text-[15px]">
             {favorites.map((name) => (
               <li key={name}>
-                <Link className="item" to={`/boards/${encodeURIComponent(name)}`}>{name}</Link>
+                <Link className="block text-[#111827] hover:underline" to={`/boards/${encodeURIComponent(name)}`}>
+                  {name}
+                </Link>
               </li>
             ))}
           </ul>
         </section>
       </main>
 
-      <nav className="tabbar">
-        <div className="container tabbar-row">
+      <nav className="fixed inset-x-0 bottom-0 border-t border-gray-200 bg-white/95 backdrop-blur-lg shadow-[0_-6px_20px_rgba(0,0,0,0.06)]">
+        <div className={`${containerClass} flex items-center justify-between gap-1 pb-[calc(8px+env(safe-area-inset-bottom,0px))] pt-2`}>
           <Tab icon={<HomeIcon />} to="/" />
           <Tab icon={<CapIcon />} to="#" />
           <Tab icon={<ListIcon active />} to="/boards" active />
@@ -103,13 +112,23 @@ function Tab({
   active,
   badge,
 }: { icon: ReactNode; to: string; active?: boolean; badge?: number }) {
+  const isActive = Boolean(active);
+
   return (
-    <Link to={to} className={`tab ${active ? "tab--active" : ""}`}>
-      <div className="icon" style={{ position: "relative" }}>
+    <Link
+      to={to}
+      className={`relative flex flex-col items-center px-3 py-1.5 text-[12px] text-gray-500 no-underline transition-colors ${isActive ? "font-semibold text-[#111827]" : ""}`}
+    >
+      <div className="relative">
         {icon}
-        {typeof badge === "number" && badge > 0 && <span className="badge">{badge}</span>}
+        {isActive && <span className="absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-[#10c1a5]" />}
+        {typeof badge === "number" && badge > 0 && (
+          <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full border border-white bg-emerald-500 px-1 text-[10px] font-bold leading-none text-white">
+            {badge}
+          </span>
+        )}
       </div>
-      {active && <span className="tab--underline" />}
+      {isActive && <span className="absolute left-1/2 -bottom-1 h-0.5 w-8 -translate-x-1/2 rounded-full bg-[#111827]" />}
     </Link>
   );
 }

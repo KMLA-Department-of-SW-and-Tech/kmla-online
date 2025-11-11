@@ -2,7 +2,8 @@ import type { ReactNode } from "react";
 import { Link, Form, useActionData } from "react-router";
 import type { ActionFunctionArgs } from "react-router";
 import type { Route } from "./+types/boards-request";
-import { BoardsStyles } from "./boards-styles";
+
+const containerClass = "mx-auto w-full max-w-[430px] px-4 sm:px-6";
 
 export const links: Route.LinksFunction = () => [];
 
@@ -17,70 +18,98 @@ export default function BoardRequestPage() {
   const actionData = useActionData<typeof action>();
 
   return (
-    <div className="boards">
-      <BoardsStyles />
-      <header className="boards-header">
-        <div className="container header-row">
-          <Link to="/boards" aria-label="뒤로" className="back-btn">
+    <div className="min-h-[100svh] bg-white text-[#111827]">
+      <header className="sticky top-0 z-10 border-b border-gray-200 bg-white/95 backdrop-blur-md">
+        <div className={`${containerClass} flex items-center gap-3 py-3`}>
+          <Link to="/boards" aria-label="뒤로" className="-ml-1 p-1 text-inherit">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path d="M15 6L9 12L15 18" stroke="#111827" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </Link>
-          <h1 className="title">게시판 개설요청</h1>
+          <h1 className="text-2xl font-bold">게시판 개설요청</h1>
         </div>
       </header>
 
-      <main className="container main">
-        <section className="section">
-          <h2 className="section-title">요청 정보</h2>
+      <main className={`${containerClass} pb-24 pt-4`}>
+        <section className="mb-4">
+          <h2 className="mb-3 text-[22px] font-bold leading-tight">요청 정보</h2>
           {actionData?.ok && (
-            <div style={{
-              marginBottom: 12,
-              padding: "10px 12px",
-              borderRadius: 10,
-              background: "#ecfdf5",
-              color: "#065f46",
-              border: "1px solid #a7f3d0",
-              fontSize: 14,
-            }}>
+            <div className="mb-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-sm text-emerald-700">
               개설 요청이 저장되었습니다. 검토 후 안내드릴게요!
             </div>
           )}
-          <Form method="post" style={{ display: "grid", rowGap: 12 }}>
+          <Form method="post" className="grid gap-3">
             <div>
-              <label htmlFor="name" style={{ display: "block", fontSize: 14, marginBottom: 6, color: "var(--muted)" }}>게시판 이름</label>
-              <input id="name" name="name" required placeholder="예: 공강"
-                style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid var(--border)" }} />
+              <label htmlFor="name" className="mb-1.5 block text-sm text-gray-500">
+                게시판 이름
+              </label>
+              <input
+                id="name"
+                name="name"
+                required
+                placeholder="예: 공강"
+                className="w-full rounded-2xl border border-gray-200 px-3 py-2.5 text-sm text-[#111827] placeholder:text-gray-400 focus:border-[#10c1a5] focus:outline-none focus:ring-2 focus:ring-[#10c1a5]/30"
+              />
             </div>
 
             <div>
-              <label htmlFor="category" style={{ display: "block", fontSize: 14, marginBottom: 6, color: "var(--muted)" }}>카테고리</label>
-              <input id="category" name="category" placeholder="예: 커뮤니티 / 공지 / 거래"
-                style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid var(--border)" }} />
+              <label htmlFor="category" className="mb-1.5 block text-sm text-gray-500">
+                카테고리
+              </label>
+              <input
+                id="category"
+                name="category"
+                placeholder="예: 커뮤니티 / 공지 / 거래"
+                className="w-full rounded-2xl border border-gray-200 px-3 py-2.5 text-sm text-[#111827] placeholder:text-gray-400 focus:border-[#10c1a5] focus:outline-none focus:ring-2 focus:ring-[#10c1a5]/30"
+              />
             </div>
 
             <div>
-              <label htmlFor="description" style={{ display: "block", fontSize: 14, marginBottom: 6, color: "var(--muted)" }}>설명</label>
-              <textarea id="description" name="description" rows={4} placeholder="게시판의 목적과 사용 가이드를 적어주세요"
-                style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid var(--border)", resize: "vertical" }} />
+              <label htmlFor="description" className="mb-1.5 block text-sm text-gray-500">
+                설명
+              </label>
+              <textarea
+                id="description"
+                name="description"
+                rows={4}
+                placeholder="게시판의 목적과 사용 가이드를 적어주세요"
+                className="w-full resize-y rounded-2xl border border-gray-200 px-3 py-2.5 text-sm text-[#111827] placeholder:text-gray-400 focus:border-[#10c1a5] focus:outline-none focus:ring-2 focus:ring-[#10c1a5]/30"
+              />
             </div>
 
             <div>
-              <label htmlFor="reason" style={{ display: "block", fontSize: 14, marginBottom: 6, color: "var(--muted)" }}>개설 사유</label>
-              <textarea id="reason" name="reason" rows={3} placeholder="개설이 필요한 이유를 적어주세요"
-                style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid var(--border)", resize: "vertical" }} />
+              <label htmlFor="reason" className="mb-1.5 block text-sm text-gray-500">
+                개설 사유
+              </label>
+              <textarea
+                id="reason"
+                name="reason"
+                rows={3}
+                placeholder="개설이 필요한 이유를 적어주세요"
+                className="w-full resize-y rounded-2xl border border-gray-200 px-3 py-2.5 text-sm text-[#111827] placeholder:text-gray-400 focus:border-[#10c1a5] focus:outline-none focus:ring-2 focus:ring-[#10c1a5]/30"
+              />
             </div>
 
-            <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-              <button type="submit" className="chip chip--primary" style={{ padding: "10px 16px" }}>요청 제출</button>
-              <Link to="/boards" className="chip chip--outline" style={{ padding: "10px 16px", textDecoration: "none" }}>목록으로</Link>
+            <div className="mt-1 flex gap-2">
+              <button
+                type="submit"
+                className="rounded-full bg-[#10c1a5] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#0ea48d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#10c1a5]"
+              >
+                요청 제출
+              </button>
+              <Link
+                to="/boards"
+                className="rounded-full border border-gray-300 px-4 py-2.5 text-sm font-semibold text-[#111827] transition hover:bg-gray-50"
+              >
+                목록으로
+              </Link>
             </div>
           </Form>
         </section>
       </main>
 
-      <nav className="tabbar">
-        <div className="container tabbar-row">
+      <nav className="fixed inset-x-0 bottom-0 border-t border-gray-200 bg-white/95 backdrop-blur-lg shadow-[0_-6px_20px_rgba(0,0,0,0.06)]">
+        <div className={`${containerClass} flex items-center justify-between gap-1 pb-[calc(8px+env(safe-area-inset-bottom,0px))] pt-2`}>
           <Tab icon={<HomeIcon />} to="/" />
           <Tab icon={<CapIcon />} to="#" />
           <Tab icon={<ListIcon active />} to="/boards" />
@@ -146,13 +175,23 @@ function Tab({
   active,
   badge,
 }: { icon: ReactNode; to: string; active?: boolean; badge?: number }) {
+  const isActive = Boolean(active);
+
   return (
-    <Link to={to} className={`tab ${active ? "tab--active" : ""}`}>
-      <div className="icon" style={{ position: "relative" }}>
+    <Link
+      to={to}
+      className={`relative flex flex-col items-center px-3 py-1.5 text-[12px] text-gray-500 no-underline transition-colors ${isActive ? "font-semibold text-[#111827]" : ""}`}
+    >
+      <div className="relative">
         {icon}
-        {typeof badge === "number" && badge > 0 && <span className="badge">{badge}</span>}
+        {isActive && <span className="absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-[#10c1a5]" />}
+        {typeof badge === "number" && badge > 0 && (
+          <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full border border-white bg-emerald-500 px-1 text-[10px] font-bold leading-none text-white">
+            {badge}
+          </span>
+        )}
       </div>
-      {active && <span className="tab--underline" />}
+      {isActive && <span className="absolute left-1/2 -bottom-1 h-0.5 w-8 -translate-x-1/2 rounded-full bg-[#111827]" />}
     </Link>
   );
 }
