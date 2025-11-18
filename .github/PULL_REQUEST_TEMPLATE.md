@@ -11,15 +11,13 @@
 - ./file2.css: 파일 수정 의도2
 - ...
 
----
+db 구조:
 
-## Supbase structure Summary
 <!-- Supabase 사용 내용 매우 짧게 정리 -->
 - 사용한 기능(Storage? Table?): 
 - 테이블별 DB 구조: 
 - RLS(사용했다면 어떻게): 사용/미사용
 
----
 
 ## How did you test this change?
 <!--
