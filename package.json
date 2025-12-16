@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "@netlify/vite-plugin-react-router": "^2.0.1",
-    "@react-router/node": "^7.9.4",
-    "@react-router/serve": "^7.9.4",
+    "@react-router/node": "^7.10.1",
+    "@react-router/serve": "^7.10.1",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.81.0",
     "class-variance-authority": "^0.7.1",
@@ -21,12 +21,12 @@
     "lucide-react": "^0.553.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "react-router": "^7.9.4",
+    "react-router": "^7.10.1",
     "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
-    "@react-router/dev": "^7.9.4",
+    "@react-router/dev": "^7.10.1",
     "@tailwindcss/vite": "^4.1.4",
     "@types/node": "^20",
     "@types/react": "^19.2.7",
