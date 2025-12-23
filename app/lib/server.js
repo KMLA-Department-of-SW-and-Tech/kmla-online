@@ -20,12 +20,12 @@ export function createClient(request) {
           cookiesToSet.forEach(({ name, value, options }) => {
             headers.append(
               "Set-Cookie",
-              serializeCookieHeader(name, value, options)
+              serializeCookieHeader(name, value, options),
             );
           });
         },
       },
-    }
+    },
   );
 
   return { supabase, headers };
