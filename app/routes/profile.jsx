@@ -1,0 +1,186 @@
+import React from "react";
+import { useLoaderData } from "react-router";
+import { createClient } from "../lib/server.js";
+
+export async function loader({ request }) {
+  const { supabase, headers } = createClient(request);
+  const { data, error } = await supabase.from("profile").select("*").limit(1);
+
+  if (error) {
+    return Response.json({ profile: null, error: error.message }, { headers });
+  }
+
+  return Response.json(
+    { profile: data?.[0] ?? null, error: null },
+    { headers }
+  );
+}
+
+export default function ProfileWithHeart() {
+  const { profile, error } = useLoaderData();
+  const [activeButton, setActiveButton] = React.useState("info");
+  const [isEditing, setIsEditing] = React.useState(false);
+  const fallbackProfile = React.useMemo(
+    () => ({
+      name: "이름 정보가 없습니다.",
+      introduce: "소개 정보가 아직 없습니다.",
+      phone_number: "전화번호 정보가 없습니다.",
+      email: "이메일 정보가 없습니다.",
+    }),
+    []
+  );
+  const displayProfile = profile ?? fallbackProfile;
+
+  const handleButtonClick = (key) => {
+    setActiveButton(key);
+  };
+
+  const handleEditClick = () => {
+    setIsEditing((prev) => !prev);
+  };
+
+  return (
+    <div className="relative w-[430px] h-[932px]">
+      {/* 상단 배경 이미지와 프로필 */}
+      <div className="relative w-[430px] h-[346px] bg-cover bg-center">
+        <img
+          src="https://i.postimg.cc/d0Xhc4Cn/e2fd43b2df5bd56f65016a92488c888ae24addf0.png"
+          alt="배경"
+          className="w-full h-full object-cover"
+        />
+
+        {/* 프로필 이미지 */}
+        <div className="absolute top-[220px] left-[130px] z-10 w-[169px] h-[169px] opacity-100">
+          <div className="relative w-full h-full">
+            <div className="w-full h-full bg-gray-300 rounded-full border-4 border-white overflow-hidden">
+              <img
+                src="https://i.postimg.cc/VsJ3N4Cn/ad61a9f2f7759b4360b81233726767c2224215c6.png"
+                alt="프로필"
+                className="w-full h-full object-cover"
+              />
+            </div>
+
+            {/* 하트 이모지 - 5시 방향에 겹치게 배치 */}
+            <div className="absolute bottom-[10px] right-[10px] z-20 flex h-[36px] w-[36.64px] items-center justify-center rounded-full border-2 border-white bg-gray-200">
+              <span className="text-lg">❤️</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 큰 흰색 배경 */}
+      <div className="absolute top-[320px] h-[612px] w-[430px] rounded-t-[24px] bg-white shadow-md">
+        <div className="px-6 pt-20 pb-6">
+          {/* 이름 + 나이 영역 */}
+          <div className="text-center mb-6">
+            <div className="absolute top-[81px] left-1/2 flex h-[28px] w-[253.45px] -translate-x-1/2 items-center justify-center gap-2">
+              <h1 className="text-center text-[20px] leading-[28px] font-semibold text-gray-800">
+                {displayProfile.name}
+              </h1>
+              {/* 편집 아이콘 */}
+              <button
+                type="button"
+                onClick={handleEditClick}
+                aria-label="프로필 편집"
+                className={`p-1 rounded-full transition-all duration-200 ${
+                  isEditing ? "bg-emerald-50 text-emerald-600" : "text-gray-500"
+                } hover:bg-emerald-50 hover:text-emerald-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500`}
+              >
+                <svg
+                  width="20px"
+                  height="20px"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="m18.5 2.5 a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z" />
+                </svg>
+              </button>
+            </div>
+
+            {/* 버튼 3개 */}
+            <div className="absolute top-[121px] left-1/2 flex -translate-x-1/2 items-center gap-2">
+              {/* 정보 버튼 (왼쪽) */}
+              <button
+                type="button"
+                onClick={() => handleButtonClick("info")}
+                className={`flex h-9 items-center justify-center rounded-full px-4 text-[12px] font-semibold leading-none whitespace-nowrap transition-all duration-200 hover:scale-[1.02] active:scale-95 ${
+                  activeButton === "info"
+                    ? "border border-emerald-500 bg-emerald-500 text-white shadow-[0_4px_12px_rgba(59,190,149,0.25)]"
+                    : "border border-neutral-900 bg-white text-slate-700 shadow-[0_2px_6px_rgba(15,15,16,0.12)]"
+                }`}
+              >
+                정보
+              </button>
+
+              {/* 대화하기 버튼 (중간) */}
+              <button
+                type="button"
+                onClick={() => handleButtonClick("chat")}
+                className={`flex h-9 items-center justify-center rounded-full px-4 text-[12px] font-semibold leading-none whitespace-nowrap transition-all duration-200 hover:scale-[1.02] active:scale-95 ${
+                  activeButton === "chat"
+                    ? "border border-emerald-500 bg-emerald-500 text-white shadow-[0_4px_12px_rgba(59,190,149,0.25)]"
+                    : "border border-neutral-900 bg-white text-slate-700 shadow-[0_2px_6px_rgba(15,15,16,0.12)]"
+                }`}
+              >
+                대화하기
+              </button>
+
+              {/* 글 목록 버튼 (오른쪽) */}
+              <button
+                type="button"
+                onClick={() => handleButtonClick("list")}
+                className={`flex h-9 items-center justify-center rounded-full px-4 text-[12px] font-semibold leading-none whitespace-nowrap transition-all duration-200 hover:scale-[1.02] active:scale-95 ${
+                  activeButton === "list"
+                    ? "border border-emerald-500 bg-emerald-500 text-white shadow-[0_4px_12px_rgba(59,190,149,0.25)]"
+                    : "border border-neutral-900 bg-white text-slate-700 shadow-[0_2px_6px_rgba(15,15,16,0.12)]"
+                }`}
+              >
+                글 목록
+              </button>
+            </div>
+          </div>
+          <div className="absolute left-6 top-[182px] flex w-[360px] flex-col gap-6">
+            {error && (
+              <div className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2">
+                <p className="text-xs font-medium text-rose-600">
+                  프로필 정보를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.
+                </p>
+              </div>
+            )}
+            <div>
+              <h3 className="text-[18px] leading-[28px] font-semibold text-gray-800">
+                소개
+              </h3>
+              <p className="text-[15px] leading-[24px] font-normal text-gray-500">
+                {displayProfile.introduce}
+              </p>
+            </div>
+
+            <div>
+              <h3 className="text-[18px] leading-[28px] font-semibold text-gray-800">
+                전화번호
+              </h3>
+              <p className="text-[15px] leading-[24px] font-normal text-gray-500">
+                {displayProfile.phone_number}
+              </p>
+            </div>
+
+            <div>
+              <h3 className="text-[18px] leading-[28px] font-semibold text-gray-800">
+                이메일
+              </h3>
+              <p className="text-[15px] leading-[24px] font-normal text-gray-500">
+                {displayProfile.email}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
