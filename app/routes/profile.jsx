@@ -1,6 +1,6 @@
 import React from "react";
 import { useLoaderData } from "react-router";
-import { createClient } from "../lib/server.ts";
+import { createClient } from "../lib/server.js";
 
 export async function loader({ request }) {
   const { supabase, headers } = createClient(request);
@@ -12,7 +12,7 @@ export async function loader({ request }) {
 
   return Response.json(
     { profile: data?.[0] ?? null, error: null },
-    { headers },
+    { headers }
   );
 }
 
@@ -27,27 +27,9 @@ export default function ProfileWithHeart() {
       phone_number: "전화번호 정보가 없습니다.",
       email: "이메일 정보가 없습니다.",
     }),
-    [],
+    []
   );
   const displayProfile = profile ?? fallbackProfile;
-
-  const baseButtonStyle = {
-    height: "26px",
-    borderRadius: "999px",
-    paddingTop: "8px",
-    paddingRight: "16px",
-    paddingBottom: "8px",
-    paddingLeft: "16px",
-    fontFamily: "Inter, sans-serif",
-    fontWeight: 600,
-    fontSize: "10px",
-    lineHeight: "100%",
-    letterSpacing: "-0.5px",
-    textAlign: "center",
-    textTransform: "capitalize",
-    transition: "all 0.2s ease",
-    whiteSpace: "nowrap",
-  };
 
   const handleButtonClick = (key) => {
     setActiveButton(key);
@@ -68,16 +50,7 @@ export default function ProfileWithHeart() {
         />
 
         {/* 프로필 이미지 */}
-        <div
-          className="absolute z-10"
-          style={{
-            top: "220px",
-            left: "130px",
-            width: "169px",
-            height: "169px",
-            opacity: 1,
-          }}
-        >
+        <div className="absolute top-[220px] left-[130px] z-10 w-[169px] h-[169px] opacity-100">
           <div className="relative w-full h-full">
             <div className="w-full h-full bg-gray-300 rounded-full border-4 border-white overflow-hidden">
               <img
@@ -88,15 +61,7 @@ export default function ProfileWithHeart() {
             </div>
 
             {/* 하트 이모지 - 5시 방향에 겹치게 배치 */}
-            <div
-              className="absolute z-20 bg-gray-200 rounded-full border-2 border-white flex items-center justify-center"
-              style={{
-                width: "36.64px",
-                height: "36px",
-                bottom: "10px",
-                right: "10px",
-              }}
-            >
+            <div className="absolute bottom-[10px] right-[10px] z-20 flex h-[36px] w-[36.64px] items-center justify-center rounded-full border-2 border-white bg-gray-200">
               <span className="text-lg">❤️</span>
             </div>
           </div>
@@ -104,41 +69,12 @@ export default function ProfileWithHeart() {
       </div>
 
       {/* 큰 흰색 배경 */}
-      <div
-        className="absolute bg-white shadow-md"
-        style={{
-          width: "430px",
-          height: "612px",
-          top: "320px",
-          borderTopLeftRadius: "24px",
-          borderTopRightRadius: "24px",
-        }}
-      >
+      <div className="absolute top-[320px] h-[612px] w-[430px] rounded-t-[24px] bg-white shadow-md">
         <div className="px-6 pt-20 pb-6">
           {/* 이름 + 나이 영역 */}
           <div className="text-center mb-6">
-            <div
-              className="absolute flex items-center justify-center gap-2"
-              style={{
-                width: "253.45px",
-                height: "28px",
-                top: "81px",
-                left: "88px",
-              }}
-            >
-              <h1
-                className="text-gray-800 text-center"
-                style={{
-                  fontFamily:
-                    "Pretendard, -apple-system, BlinkMacSystemFont, sans-serif",
-                  fontWeight: 600,
-                  fontStyle: "semi-bold",
-                  fontSize: "20px",
-                  lineHeight: "28px",
-                  letterSpacing: "-2.5%",
-                  textAlign: "center",
-                }}
-              >
+            <div className="absolute top-[81px] left-1/2 flex h-[28px] w-[253.45px] -translate-x-1/2 items-center justify-center gap-2">
+              <h1 className="text-center text-[20px] leading-[28px] font-semibold text-gray-800">
                 {displayProfile.name}
               </h1>
               {/* 편집 아이콘 */}
@@ -149,7 +85,6 @@ export default function ProfileWithHeart() {
                 className={`p-1 rounded-full transition-all duration-200 ${
                   isEditing ? "bg-emerald-50 text-emerald-600" : "text-gray-500"
                 } hover:bg-emerald-50 hover:text-emerald-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500`}
-                style={{ lineHeight: 0 }}
               >
                 <svg
                   width="20px"
@@ -168,35 +103,16 @@ export default function ProfileWithHeart() {
             </div>
 
             {/* 버튼 3개 */}
-            <div
-              className="absolute flex gap-2"
-              style={{
-                width: "195px",
-                height: "26px",
-                top: "121px", // 441px - 320px
-                left: "118px",
-                gap: "8px",
-              }}
-            >
+            <div className="absolute top-[121px] left-1/2 flex -translate-x-1/2 items-center gap-2">
               {/* 정보 버튼 (왼쪽) */}
               <button
                 type="button"
                 onClick={() => handleButtonClick("info")}
-                className="flex items-center justify-center hover:scale-[1.02] active:scale-95"
-                style={{
-                  width: "50px",
-                  ...baseButtonStyle,
-                  borderWidth: "1px",
-                  borderColor:
-                    activeButton === "info" ? "#3BBE95" : "#0f0f10ff",
-                  backgroundColor:
-                    activeButton === "info" ? "#3BBE95" : "#ffffff",
-                  color: activeButton === "info" ? "#ffffff" : "#374151",
-                  boxShadow:
-                    activeButton === "info"
-                      ? "0 4px 12px rgba(59, 190, 149, 0.25)"
-                      : "0 2px 6px rgba(15, 15, 16, 0.12)",
-                }}
+                className={`flex h-9 items-center justify-center rounded-full px-4 text-[12px] font-semibold leading-none whitespace-nowrap transition-all duration-200 hover:scale-[1.02] active:scale-95 ${
+                  activeButton === "info"
+                    ? "border border-emerald-500 bg-emerald-500 text-white shadow-[0_4px_12px_rgba(59,190,149,0.25)]"
+                    : "border border-neutral-900 bg-white text-slate-700 shadow-[0_2px_6px_rgba(15,15,16,0.12)]"
+                }`}
               >
                 정보
               </button>
@@ -205,21 +121,11 @@ export default function ProfileWithHeart() {
               <button
                 type="button"
                 onClick={() => handleButtonClick("chat")}
-                className="flex items-center justify-center hover:scale-[1.02] active:scale-95"
-                style={{
-                  width: "68px",
-                  ...baseButtonStyle,
-                  borderWidth: "1px",
-                  borderColor:
-                    activeButton === "chat" ? "#3BBE95" : "#0f0f10ff",
-                  backgroundColor:
-                    activeButton === "chat" ? "#3BBE95" : "#ffffff",
-                  color: activeButton === "chat" ? "#ffffff" : "#374151",
-                  boxShadow:
-                    activeButton === "chat"
-                      ? "0 4px 12px rgba(59, 190, 149, 0.25)"
-                      : "0 2px 6px rgba(15, 15, 16, 0.12)",
-                }}
+                className={`flex h-9 items-center justify-center rounded-full px-4 text-[12px] font-semibold leading-none whitespace-nowrap transition-all duration-200 hover:scale-[1.02] active:scale-95 ${
+                  activeButton === "chat"
+                    ? "border border-emerald-500 bg-emerald-500 text-white shadow-[0_4px_12px_rgba(59,190,149,0.25)]"
+                    : "border border-neutral-900 bg-white text-slate-700 shadow-[0_2px_6px_rgba(15,15,16,0.12)]"
+                }`}
               >
                 대화하기
               </button>
@@ -228,30 +134,17 @@ export default function ProfileWithHeart() {
               <button
                 type="button"
                 onClick={() => handleButtonClick("list")}
-                className="flex items-center justify-center hover:scale-[1.02] active:scale-95"
-                style={{
-                  width: "61px",
-                  ...baseButtonStyle,
-                  borderWidth: "1px",
-                  borderColor:
-                    activeButton === "list" ? "#3BBE95" : "#0f0f10ff",
-                  backgroundColor:
-                    activeButton === "list" ? "#3BBE95" : "#ffffff",
-                  color: activeButton === "list" ? "#ffffff" : "#374151",
-                  boxShadow:
-                    activeButton === "list"
-                      ? "0 4px 12px rgba(59, 190, 149, 0.25)"
-                      : "0 2px 6px rgba(15, 15, 16, 0.12)",
-                }}
+                className={`flex h-9 items-center justify-center rounded-full px-4 text-[12px] font-semibold leading-none whitespace-nowrap transition-all duration-200 hover:scale-[1.02] active:scale-95 ${
+                  activeButton === "list"
+                    ? "border border-emerald-500 bg-emerald-500 text-white shadow-[0_4px_12px_rgba(59,190,149,0.25)]"
+                    : "border border-neutral-900 bg-white text-slate-700 shadow-[0_2px_6px_rgba(15,15,16,0.12)]"
+                }`}
               >
                 글 목록
               </button>
             </div>
           </div>
-          <div
-            className="absolute flex flex-col gap-6 w-[360px] left-[24px]"
-            style={{ top: "182px" }}
-          >
+          <div className="absolute left-6 top-[182px] flex w-[360px] flex-col gap-6">
             {error && (
               <div className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2">
                 <p className="text-xs font-medium text-rose-600">
@@ -260,94 +153,28 @@ export default function ProfileWithHeart() {
               </div>
             )}
             <div>
-              <h3
-                className="text-gray-800"
-                style={{
-                  fontFamily:
-                    "Pretendard, -apple-system, BlinkMacSystemFont, sans-serif",
-                  fontWeight: 600,
-                  fontStyle: "normal",
-                  fontSize: "18px",
-                  lineHeight: "28px",
-                  letterSpacing: "-2.5%",
-                }}
-              >
+              <h3 className="text-[18px] leading-[28px] font-semibold text-gray-800">
                 소개
               </h3>
-              <p
-                className="text-gray-500"
-                style={{
-                  fontFamily:
-                    "Pretendard, -apple-system, BlinkMacSystemFont, sans-serif",
-                  fontWeight: 400,
-                  fontStyle: "normal",
-                  fontSize: "15px",
-                  lineHeight: "24px",
-                  letterSpacing: "-2.5%",
-                }}
-              >
+              <p className="text-[15px] leading-[24px] font-normal text-gray-500">
                 {displayProfile.introduce}
               </p>
             </div>
 
             <div>
-              <h3
-                className="text-gray-800"
-                style={{
-                  fontFamily:
-                    "Pretendard, -apple-system, BlinkMacSystemFont, sans-serif",
-                  fontWeight: 600,
-                  fontStyle: "normal",
-                  fontSize: "18px",
-                  lineHeight: "28px",
-                  letterSpacing: "-2.5%",
-                }}
-              >
+              <h3 className="text-[18px] leading-[28px] font-semibold text-gray-800">
                 전화번호
               </h3>
-              <p
-                className="text-gray-500"
-                style={{
-                  fontFamily:
-                    "Pretendard, -apple-system, BlinkMacSystemFont, sans-serif",
-                  fontWeight: 400,
-                  fontStyle: "normal",
-                  fontSize: "15px",
-                  lineHeight: "24px",
-                  letterSpacing: "-2.5%",
-                }}
-              >
+              <p className="text-[15px] leading-[24px] font-normal text-gray-500">
                 {displayProfile.phone_number}
               </p>
             </div>
 
             <div>
-              <h3
-                className="text-gray-800"
-                style={{
-                  fontFamily:
-                    "Pretendard, -apple-system, BlinkMacSystemFont, sans-serif",
-                  fontWeight: 600,
-                  fontStyle: "normal",
-                  fontSize: "18px",
-                  lineHeight: "28px",
-                  letterSpacing: "-2.5%",
-                }}
-              >
+              <h3 className="text-[18px] leading-[28px] font-semibold text-gray-800">
                 이메일
               </h3>
-              <p
-                className="text-gray-500"
-                style={{
-                  fontFamily:
-                    "Pretendard, -apple-system, BlinkMacSystemFont, sans-serif",
-                  fontWeight: 400,
-                  fontStyle: "normal",
-                  fontSize: "15px",
-                  lineHeight: "24px",
-                  letterSpacing: "-2.5%",
-                }}
-              >
+              <p className="text-[15px] leading-[24px] font-normal text-gray-500">
                 {displayProfile.email}
               </p>
             </div>
