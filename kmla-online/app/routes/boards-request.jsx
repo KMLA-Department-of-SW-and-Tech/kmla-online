@@ -1,11 +1,8 @@
-import type { ReactNode } from "react";
 import { Link, Form, useActionData } from "react-router";
-import type { ActionFunctionArgs } from "react-router";
-import type { Route } from "./+types/boards-request";
 
 const containerClass = "mx-auto w-full max-w-[430px] px-4 sm:px-6";
 
-export const links: Route.LinksFunction = () => [];
+export const links = () => [];
 
 export function meta() {
   return [
@@ -15,7 +12,11 @@ export function meta() {
 }
 
 export default function BoardRequestPage() {
-  const actionData = useActionData<typeof action>();
+  const actionData = useActionData();
+  const errorMessage =
+    actionData && actionData.ok === false
+      ? actionData.message || "요청 제출에 실패했습니다. 잠시 후 다시 시도해주세요."
+      : null;
 
   return (
     <div className="min-h-[100svh] bg-white text-[#111827]">
@@ -35,7 +36,12 @@ export default function BoardRequestPage() {
           <h2 className="mb-3 text-[22px] font-bold leading-tight">요청 정보</h2>
           {actionData?.ok && (
             <div className="mb-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-sm text-emerald-700">
-              게시판이 개설되었습니다. 테스트용으로 즉시 반영됩니다.
+              개설 요청이 저장되었습니다. 검토 후 안내드릴게요!
+            </div>
+          )}
+          {errorMessage && (
+            <div className="mb-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-sm text-rose-700">
+              {errorMessage}
             </div>
           )}
           <Form method="post" className="grid gap-3">
@@ -48,18 +54,6 @@ export default function BoardRequestPage() {
                 name="name"
                 required
                 placeholder="예: 공강"
-                className="w-full rounded-2xl border border-gray-200 px-3 py-2.5 text-sm text-[#111827] placeholder:text-gray-400 focus:border-[#10c1a5] focus:outline-none focus:ring-2 focus:ring-[#10c1a5]/30"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="category" className="mb-1.5 block text-sm text-gray-500">
-                카테고리
-              </label>
-              <input
-                id="category"
-                name="category"
-                placeholder="예: 커뮤니티 / 공지 / 거래"
                 className="w-full rounded-2xl border border-gray-200 px-3 py-2.5 text-sm text-[#111827] placeholder:text-gray-400 focus:border-[#10c1a5] focus:outline-none focus:ring-2 focus:ring-[#10c1a5]/30"
               />
             </div>
@@ -121,22 +115,27 @@ export default function BoardRequestPage() {
   );
 }
 
-export async function action({ request }: ActionFunctionArgs) {
+export async function action({ request }) {
   const form = await request.formData();
   const name = String(form.get("name") || "").trim();
-  const category = String(form.get("category") || "").trim();
   const description = String(form.get("description") || "").trim();
+  const reason = String(form.get("reason") || "").trim();
 
   if (!name) {
-    return { ok: false, error: "name_required" } as const;
+    return { ok: false, error: "name_required", message: "게시판 이름을 입력해주세요." };
   }
 
   try {
-    const SUPABASE_URL = process.env.SUPABASE_URL || "https://pknwhzohdspdixdywktn.supabase.co";
-    const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrbndoem9oZHNwZGl4ZHl3a3RuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgyODM3NDgsImV4cCI6MjA3Mzg1OTc0OH0.ZlO3CMGlhih-dZTjFg_sgOdeVDAJhkMCIGGJQJctecM";
+    const SUPABASE_URL =
+      process.env.VITE_SUPABASE_URL ||
+      process.env.SUPABASE_URL ||
+      "https://pknwhzohdspdixdywktn.supabase.co";
+    const SUPABASE_ANON_KEY =
+      process.env.VITE_SUPABASE_PUBLISHABLE_OR_ANON_KEY ||
+      process.env.SUPABASE_ANON_KEY ||
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrbndoem9oZHNwZGl4ZHl3a3RuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgyODM3NDgsImV4cCI6MjA3Mzg1OTc0OH0.ZlO3CMGlhih-dZTjFg_sgOdeVDAJhkMCIGGJQJctecM";
 
-    // 현재는 테스트를 위해 검토 절차를 제외함.
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/boards`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/board_requests`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -147,8 +146,8 @@ export async function action({ request }: ActionFunctionArgs) {
       body: JSON.stringify([
         {
           name,
-          category: category || null,
           description: description || null,
+          reason: reason || null,
           created_at: new Date().toISOString(),
         },
       ]),
@@ -157,23 +156,19 @@ export async function action({ request }: ActionFunctionArgs) {
     const data = await res.json().catch(() => undefined);
     if (!res.ok) {
       const message = (data && (data.message || data.error)) || `HTTP ${res.status}`;
-      return { ok: false, error: "supabase_insert_failed", message } as const;
+      console.error("supabase insert failed", { status: res.status, message });
+      return { ok: false, error: "supabase_insert_failed", message };
     }
 
     const inserted = Array.isArray(data) && data.length ? data[0] : undefined;
-    return { ok: true, id: inserted?.id ?? null } as const;
+    return { ok: true, id: inserted?.id ?? null };
   } catch (err) {
     console.error("supabase request failed", err);
-    return { ok: false, error: "save_failed" } as const;
+    return { ok: false, error: "save_failed" };
   }
 }
 
-function Tab({
-  icon,
-  to,
-  active,
-  badge,
-}: { icon: ReactNode; to: string; active?: boolean; badge?: number }) {
+function Tab({ icon, to, active, badge }) {
   const isActive = Boolean(active);
 
   return (
@@ -210,7 +205,7 @@ function CapIcon() {
     </svg>
   );
 }
-function ListIcon({ active }: { active?: boolean }) {
+function ListIcon({ active }) {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} className="stroke-current">
       <rect x="4" y="5" width="16" height="14" rx="2" strokeWidth="1.8" />
