@@ -1,5 +1,7 @@
 import { Link, useLoaderData } from "react-router";
 import { createClient } from "../lib/server";
+import { listBoards } from "../models/boards.server";
+import { listMembershipsForUser } from "../models/memberships.server";
 
 const containerClass = "mx-auto w-full max-w-[430px] px-4 sm:px-6";
 
@@ -13,31 +15,45 @@ export function meta() {
 }
 
 export async function loader({ request }) {
-  const { supabase } = createClient(request);
-  const { data, error } = await supabase
-    .from("boards")
-    .select("id,name,section,side,position")
-    .order("position", { ascending: true });
+  const { supabase, headers } = createClient(request);
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const { data, error } = await listBoards(supabase);
 
   if (error) {
     console.error("Failed to load boards", error);
-    return { boards: [] };
+    return Response.json({ boards: [], memberships: [] }, { headers });
   }
 
-  return { boards: data ?? [] };
+  let memberships = [];
+  if (session?.user) {
+    const { data: membershipRows, error: membershipError } =
+      await listMembershipsForUser(supabase, session.user.id);
+    if (membershipError) {
+      console.error("Failed to load memberships", membershipError);
+    } else {
+      memberships = membershipRows ?? [];
+    }
+  }
+
+  return Response.json({ boards: data ?? [], memberships }, { headers });
 }
 
 export default function BoardsPage() {
   const { boards } = useLoaderData();
   const noticesLeft = boards
     .filter((board) => board.section === "notice" && board.side === "left")
-    .map((board) => board.name);
+    .map((board) => ({ name: board.name, slug: board.slug }));
   const noticesRight = boards
     .filter((board) => board.section === "notice" && board.side === "right")
-    .map((board) => board.name);
+    .map((board) => ({ name: board.name, slug: board.slug }));
   const favorites = boards
     .filter((board) => board.section === "favorite")
-    .map((board) => board.name);
+    .map((board) => ({ name: board.name, slug: board.slug }));
+
+  const getBoardHref = (board) =>
+    `/boards/${encodeURIComponent(board.slug || board.name)}`;
 
   return (
     <div className="min-h-[100svh] bg-white text-[#111827]">
@@ -87,25 +103,31 @@ export default function BoardsPage() {
           </h2>
           <div className="grid grid-cols-2 items-start gap-x-6">
             <ul className="grid list-none gap-y-3 p-0">
-              {noticesLeft.map((name) => (
-                <li key={name} className="flex h-8 items-center">
+              {noticesLeft.map((board) => (
+                <li
+                  key={board.slug || board.name}
+                  className="flex h-8 items-center"
+                >
                   <Link
                     className="block truncate text-[15px] text-[#111827] hover:underline"
-                    to={`/boards/${encodeURIComponent(name)}`}
+                    to={getBoardHref(board)}
                   >
-                    {name}
+                    {board.name}
                   </Link>
                 </li>
               ))}
             </ul>
             <ul className="grid list-none gap-y-3 p-0">
-              {noticesRight.map((name) => (
-                <li key={name} className="flex h-8 items-center">
+              {noticesRight.map((board) => (
+                <li
+                  key={board.slug || board.name}
+                  className="flex h-8 items-center"
+                >
                   <Link
                     className="block truncate text-[15px] text-[#111827] hover:underline"
-                    to={`/boards/${encodeURIComponent(name)}`}
+                    to={getBoardHref(board)}
                   >
-                    {name}
+                    {board.name}
                   </Link>
                 </li>
               ))}
@@ -128,13 +150,13 @@ export default function BoardsPage() {
             </Link>
           </div>
           <ul className="mt-3 grid list-none gap-y-3 p-0 text-[15px]">
-            {favorites.map((name) => (
-              <li key={name}>
+            {favorites.map((board) => (
+              <li key={board.slug || board.name}>
                 <Link
                   className="block text-[#111827] hover:underline"
-                  to={`/boards/${encodeURIComponent(name)}`}
+                  to={getBoardHref(board)}
                 >
-                  {name}
+                  {board.name}
                 </Link>
               </li>
             ))}

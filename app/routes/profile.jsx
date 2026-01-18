@@ -1,19 +1,41 @@
 import React from "react";
-import { useLoaderData } from "react-router";
-import { createClient } from "../lib/server.js";
+import { redirect, useLoaderData } from "react-router";
+import { createClient } from "../lib/server";
+import { getProfileById } from "../models/profiles.server";
 
 export async function loader({ request }) {
   const { supabase, headers } = createClient(request);
-  const { data, error } = await supabase.from("profile").select("*").limit(1);
+  const {
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession();
+
+  if (sessionError) {
+    console.error("Session error:", sessionError);
+  }
+
+  if (!session) {
+    const url = new URL(request.url);
+    const redirectTo = encodeURIComponent(url.pathname + url.search);
+    throw redirect(`/login?redirectTo=${redirectTo}`);
+  }
+
+  const { data, error } = await getProfileById(supabase, session.user.id);
 
   if (error) {
     return Response.json({ profile: null, error: error.message }, { headers });
   }
 
-  return Response.json(
-    { profile: data?.[0] ?? null, error: null },
-    { headers }
-  );
+  const profile = data
+    ? {
+        name: data.display_name,
+        introduce: data.bio,
+        phone_number: data.phone_number,
+        email: data.email,
+      }
+    : null;
+
+  return Response.json({ profile, error: null }, { headers });
 }
 
 export default function ProfileWithHeart() {
@@ -27,7 +49,7 @@ export default function ProfileWithHeart() {
       phone_number: "전화번호 정보가 없습니다.",
       email: "이메일 정보가 없습니다.",
     }),
-    []
+    [],
   );
   const displayProfile = profile ?? fallbackProfile;
 

@@ -8,6 +8,8 @@ import {
 } from "react-router";
 
 import "./app.css";
+import { createClient } from "./lib/server";
+import { ensureDefaultBoardMemberships } from "./models/memberships.server";
 
 export const links = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -21,6 +23,44 @@ export const links = () => [
     href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
   },
 ];
+
+export async function loader({ request }) {
+  const { supabase, headers } = createClient(request);
+  const {
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession();
+
+  if (sessionError) {
+    console.error("Session error:", sessionError);
+  }
+
+  let user = null;
+  let profile = null;
+
+  if (session?.user) {
+    await ensureDefaultBoardMemberships(request, session.user.id);
+
+    const { data: profileData, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, display_name, avatar_url")
+      .eq("id", session.user.id)
+      .single();
+
+    if (profileError) {
+      console.error("Profile load error:", profileError);
+    } else {
+      profile = profileData;
+    }
+
+    user = {
+      id: session.user.id,
+      email: session.user.email,
+    };
+  }
+
+  return Response.json({ user, profile }, { headers });
+}
 
 export function Layout({ children }) {
   return (

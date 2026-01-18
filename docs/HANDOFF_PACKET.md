@@ -311,6 +311,101 @@ For existing database:
 
 ---
 
+## Rendering Architecture
+
+See `docs/RENDERING_STRATEGY.md` for full details.
+
+### Route Categories
+
+| Category | Purpose | Auth | Data Loading |
+|----------|---------|------|--------------|
+| **A (Public SSR)** | SEO, fast first paint | Optional | Server loader only |
+| **B (Auth SSR)** | No auth flicker | Required + redirect | Server loader only |
+| **C (App Shell)** | Dynamic content | Optional/Required | Loader + client revalidation |
+| **D (Realtime)** | Live updates | Required | Loader + Supabase subscription |
+
+### Route Category Assignments
+
+| Route | Category | Auth | Notes |
+|-------|----------|------|-------|
+| `/` | C | Optional | Today's songs, user submissions |
+| `/gongang_other` | D | Required | Live booking grid |
+| `/profile` | B | Redirect | User's own profile |
+| `/search` | A | None | Public search |
+| `/submitsong` | B | Redirect | Submit form |
+| `/boards` | A | Optional | Public board list |
+| `/boards/:slug` | A/C | Conditional | Public SSR or member-only |
+| `/boards/:slug/members` | B | Required | Member management |
+| `/my-boards` | B | Redirect | User's memberships |
+| `/join-requests` | B | Admin check | Admin inbox |
+
+---
+
+## Client Supabase Usage Rules
+
+### When Client Queries Are Allowed
+
+| Scenario | Allowed? | Method |
+|----------|----------|--------|
+| Initial page data | NO | Use loader |
+| Realtime subscriptions | YES | `supabase.channel().on()` |
+| Polling/revalidation | YES | `useRevalidator()` (preferred) or client query |
+| Form mutations | PREFER ACTION | Or client with RLS protection |
+
+### Client Query Requirements
+
+If client-side Supabase queries are used, they MUST:
+
+1. **Use the consistent client helper:**
+   ```typescript
+   import { createClient } from '~/lib/client';
+   const supabase = createClient(); // Uses anon key + user session
+   ```
+
+2. **Only query RLS-protected tables:**
+   - All tables have RLS enabled
+   - Queries return only rows the user can access
+   - No service role key on client EVER
+
+3. **Be for realtime/subscription use cases:**
+   ```typescript
+   // ALLOWED: Subscription
+   supabase.channel('updates').on('postgres_changes', ...).subscribe();
+
+   // ALLOWED: Revalidation after subscription notification
+   const { data } = await supabase.from('posts').select('*').eq('board_id', id);
+
+   // NOT ALLOWED: Initial page load (use loader instead)
+   useEffect(() => {
+     supabase.from('posts').select('*').then(setData); // NO!
+   }, []);
+   ```
+
+4. **Have explicit justification in route documentation**
+
+### Mutation Rules
+
+| Mutation Type | Preferred Method | Alternative |
+|--------------|------------------|-------------|
+| Form submit | RRv7 Action | - |
+| Inline edit | RRv7 Action via fetcher | Client mutation if RLS-protected |
+| Optimistic update | Client mutation + revalidate | - |
+| Admin operations | Server action with service role | NEVER client |
+
+---
+
+## Security Invariants
+
+These rules are NON-NEGOTIABLE:
+
+1. **All data access enforced by Supabase RLS** - No exceptions
+2. **No service role key on client** - Ever, for any reason
+3. **Session established server-side** - Root loader fetches session
+4. **Auth checks in loaders/actions** - Not in components
+5. **Redirects in loaders** - No client-side auth redirects
+
+---
+
 ## Related Documentation
 
 - `supabase/SCHEMA.md` - Full schema documentation
@@ -318,3 +413,5 @@ For existing database:
 - `docs/ROUTES.md` - Route inventory
 - `docs/DATA_REQUIREMENTS.md` - Data model per route
 - `docs/INCONSISTENCIES.md` - Known issues
+- `docs/RENDERING_STRATEGY.md` - Hybrid SSR+CSR architecture
+- `docs/PATTERNS.md` - Implementation patterns

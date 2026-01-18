@@ -4,25 +4,27 @@ import {
   serializeCookieHeader,
 } from "@supabase/ssr";
 
-export function createClient(request) {
+export function createClient(request: Request) {
   const headers = new Headers();
 
   const supabase = createServerClient(
-    process.env.VITE_SUPABASE_URL,
-    process.env.VITE_SUPABASE_PUBLISHABLE_OR_ANON_KEY,
+    process.env.VITE_SUPABASE_URL!,
+    process.env.VITE_SUPABASE_ANON_KEY!,
     {
       cookies: {
         getAll() {
-          const raw = request.headers.get("Cookie") || "";
-          return parseCookieHeader(raw);
+          return parseCookieHeader(request.headers.get("Cookie") ?? "") as {
+            name: string;
+            value: string;
+          }[];
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
+          cookiesToSet.forEach(({ name, value, options }) =>
             headers.append(
               "Set-Cookie",
               serializeCookieHeader(name, value, options),
-            );
-          });
+            ),
+          );
         },
       },
     },

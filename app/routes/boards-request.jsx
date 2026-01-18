@@ -1,4 +1,6 @@
-import { Link, Form, useActionData } from "react-router";
+import { Link, Form, redirect, useActionData } from "react-router";
+import { createClient } from "../lib/server";
+import { createBoardRequest } from "../models/boardRequests.server";
 
 const containerClass = "mx-auto w-full max-w-[430px] px-4 sm:px-6";
 
@@ -140,61 +142,54 @@ export default function BoardRequestPage() {
 }
 
 export async function action({ request }) {
+  const { supabase, headers } = createClient(request);
+  const {
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession();
+
+  if (sessionError) {
+    console.error("Session error:", sessionError);
+  }
+
+  if (!session) {
+    const url = new URL(request.url);
+    const redirectTo = encodeURIComponent(url.pathname + url.search);
+    throw redirect(`/login?redirectTo=${redirectTo}`);
+  }
+
   const form = await request.formData();
   const name = String(form.get("name") || "").trim();
   const description = String(form.get("description") || "").trim();
   const reason = String(form.get("reason") || "").trim();
 
   if (!name) {
-    return {
-      ok: false,
-      error: "name_required",
-      message: "게시판 이름을 입력해주세요.",
-    };
-  }
-
-  try {
-    const SUPABASE_URL =
-      process.env.VITE_SUPABASE_URL ||
-      process.env.SUPABASE_URL ||
-      "https://pknwhzohdspdixdywktn.supabase.co";
-    const SUPABASE_ANON_KEY =
-      process.env.VITE_SUPABASE_PUBLISHABLE_OR_ANON_KEY ||
-      process.env.SUPABASE_ANON_KEY ||
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrbndoem9oZHNwZGl4ZHl3a3RuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgyODM3NDgsImV4cCI6MjA3Mzg1OTc0OH0.ZlO3CMGlhih-dZTjFg_sgOdeVDAJhkMCIGGJQJctecM";
-
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/board_requests`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-        Prefer: "return=representation",
+    return Response.json(
+      {
+        ok: false,
+        error: "name_required",
+        message: "Board name is required.",
       },
-      body: JSON.stringify([
-        {
-          name,
-          description: description || null,
-          reason: reason || null,
-          created_at: new Date().toISOString(),
-        },
-      ]),
-    });
-
-    const data = await res.json().catch(() => undefined);
-    if (!res.ok) {
-      const message =
-        (data && (data.message || data.error)) || `HTTP ${res.status}`;
-      console.error("supabase insert failed", { status: res.status, message });
-      return { ok: false, error: "supabase_insert_failed", message };
-    }
-
-    const inserted = Array.isArray(data) && data.length ? data[0] : undefined;
-    return { ok: true, id: inserted?.id ?? null };
-  } catch (err) {
-    console.error("supabase request failed", err);
-    return { ok: false, error: "save_failed" };
+      { status: 400, headers },
+    );
   }
+
+  const { data, error } = await createBoardRequest(supabase, {
+    user_id: session.user.id,
+    name,
+    description: description || null,
+    reason: reason || null,
+  });
+
+  if (error) {
+    console.error("supabase insert failed", error);
+    return Response.json(
+      { ok: false, error: "supabase_insert_failed", message: error.message },
+      { status: 400, headers },
+    );
+  }
+
+  return Response.json({ ok: true, id: data?.id ?? null }, { headers });
 }
 
 function Tab({ icon, to, active, badge }) {

@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
-import { createClient } from "~/lib/client";
-const supabase = createClient();
+import { redirect, useFetcher } from "react-router";
+import { createClient } from "~/lib/server";
+import { createSongSubmission } from "~/models/songs.server";
 
-const YOUTUBE_API_KEY = "AIzaSyBrAr6dxzLvW8t8apB3hw_-Fucn1nzcOvk";
-const USER_NAME = "30기 고동재";
+const YOUTUBE_API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY;
 
 type VideoItem = {
   title: string;
@@ -19,6 +19,84 @@ function useDebounced(value: string, delay = 400) {
     return () => clearTimeout(t);
   }, [value, delay]);
   return debounced;
+}
+
+function getLocalDateKey() {
+  const now = new Date();
+  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 10);
+}
+
+function getVideoId(url: string) {
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname.includes("youtu.be")) return parsed.pathname.slice(1);
+    return parsed.searchParams.get("v");
+  } catch {
+    return null;
+  }
+}
+
+export async function loader({ request }) {
+  const { supabase } = createClient(request);
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session) {
+    const url = new URL(request.url);
+    const redirectTo = encodeURIComponent(url.pathname + url.search);
+    throw redirect(`/login?redirectTo=${redirectTo}`);
+  }
+
+  return null;
+}
+
+export async function action({ request }) {
+  const { supabase, headers } = createClient(request);
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session) {
+    const url = new URL(request.url);
+    const redirectTo = encodeURIComponent(url.pathname + url.search);
+    throw redirect(`/login?redirectTo=${redirectTo}`);
+  }
+
+  const form = await request.formData();
+  const url = String(form.get("url") || "");
+  const title = String(form.get("title") || "");
+  const thumbnail = String(form.get("thumbnail") || "");
+
+  if (!url) {
+    return Response.json(
+      { ok: false, message: "URL is required." },
+      { status: 400, headers },
+    );
+  }
+
+  const videoId = getVideoId(url);
+
+  const { error } = await createSongSubmission(supabase, {
+    user_id: session.user.id,
+    youtube_url: url,
+    youtube_video_id: videoId,
+    youtube_title: title || null,
+    youtube_thumbnail_url: thumbnail || null,
+    scheduled_date: getLocalDateKey(),
+    status: "pending",
+  });
+
+  if (error) {
+    console.error("Insert failed:", error);
+    return Response.json(
+      { ok: false, message: error.message },
+      { status: 400, headers },
+    );
+  }
+
+  return Response.json({ ok: true }, { headers });
 }
 
 function SearchSong({
@@ -38,28 +116,6 @@ function SearchSong({
   const [error, setError] = useState<string | null>(null);
   const debouncedQuery = useDebounced(query);
 
-  async function insert(item: { title: string; url: string }) {
-    try {
-      const date = new Date().toISOString();
-      const { error } = await supabase.from("items").insert([
-        {
-          title: USER_NAME,
-          url: item.url,
-          date: date,
-        },
-      ]);
-      if (error) {
-        console.error("Insert failed:", error.message);
-        alert("저장 중 오류가 발생했습니다.");
-      } else {
-        console.log("Inserted:", item);
-        alert("신청이 완료되었습니다!");
-      }
-    } catch (err) {
-      console.error("Unexpected error:", err);
-    }
-  }
-
   async function searchYoutube(q: string) {
     try {
       setLoading(true);
@@ -75,7 +131,7 @@ function SearchSong({
       const data = await res.json();
 
       const list: VideoItem[] = (data.items || []).map((it: any) => ({
-        title: it?.snippet?.title ?? "(제목 없음)",
+        title: it?.snippet?.title ?? "(Unknown)",
         url: `https://www.youtube.com/watch?v=${it?.id?.videoId ?? ""}`,
         thumbnail: it?.snippet?.thumbnails?.medium?.url ?? "",
       }));
@@ -83,7 +139,7 @@ function SearchSong({
       setResults(list);
     } catch (e: any) {
       setResults([]);
-      setError(e?.message || "검색 실패");
+      setError(e?.message || "Search failed.");
     } finally {
       setLoading(false);
     }
@@ -108,17 +164,17 @@ function SearchSong({
       >
         <div className="mb-3 text-center">
           <h2 className="mb-2 text-[32px] font-extrabold text-slate-900">
-            신청하기
+            Submit a song
           </h2>
           <p className="text-sm text-slate-500">
-            기상송으로 부적합한 노래는 삭제될 수 있습니다!
+            Search for a YouTube video and submit it for review.
           </p>
         </div>
 
         <div className="mb-3 flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2.5">
           <img
             src="/searchIcon.png"
-            alt="검색"
+            alt="search"
             className="h-5 w-5 opacity-70"
           />
           <input
@@ -132,7 +188,7 @@ function SearchSong({
 
         {loading && (
           <div className="mt-2 text-center text-sm text-slate-500">
-            불러오는 중...
+            Loading...
           </div>
         )}
         {error && (
@@ -145,7 +201,6 @@ function SearchSong({
               key={i}
               className="grid w-full grid-cols-[35%_65%] items-center gap-3 rounded-xl bg-white p-2 text-left transition hover:bg-slate-50 hover:shadow-sm"
               onClick={async () => {
-                await insert(v);
                 await onPick(v);
                 setQuery("");
                 setResults([]);
@@ -181,14 +236,22 @@ function SearchSong({
 
 function RequestButton() {
   const [open, setOpen] = useState(false);
+  const fetcher = useFetcher();
 
-  async function handlePick(video: { title: string; url: string }) {
-    await supabase.from("items").insert({
-      name: USER_NAME,
-      url: video.url,
-      date: new Date().toISOString(),
-    });
+  async function handlePick(video: VideoItem) {
+    const payload = new FormData();
+    payload.set("url", video.url);
+    payload.set("title", video.title);
+    payload.set("thumbnail", video.thumbnail);
+
+    fetcher.submit(payload, { method: "post" });
   }
+
+  useEffect(() => {
+    if (fetcher.data?.ok) {
+      alert("Song submitted.");
+    }
+  }, [fetcher.data]);
 
   return (
     <main className="p-4 text-center">
@@ -196,7 +259,7 @@ function RequestButton() {
         className="cursor-pointer border-0 bg-transparent inline-block"
         onClick={() => setOpen(true)}
       >
-        <img src="/button.png" alt="신청하기" className="h-auto w-40" />
+        <img src="/button.png" alt="Submit" className="h-auto w-40" />
       </button>
 
       <SearchSong
@@ -211,7 +274,7 @@ function RequestButton() {
   );
 }
 
-export default function Home() {
+export default function SubmitSong() {
   return (
     <main className="flex justify-center pt-[100px]">
       <RequestButton />

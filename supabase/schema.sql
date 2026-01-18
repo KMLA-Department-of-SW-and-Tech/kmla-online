@@ -163,7 +163,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_gongang_bookings_unique ON gongang_booking
   WHERE deleted_at IS NULL;
 
 COMMENT ON TABLE gongang_bookings IS 'Class period "gongang" (free period) location bookings';
-COMMENT ON CONSTRAINT idx_gongang_bookings_unique ON gongang_bookings IS 'Prevent double-booking: one booking per class/day/place';
+COMMENT ON INDEX idx_gongang_bookings_unique IS 'Prevent double-booking: one booking per class/day/place';
 
 -- ============================================================================
 -- FREE BOOKINGS (자유신청)

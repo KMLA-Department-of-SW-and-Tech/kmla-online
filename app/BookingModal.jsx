@@ -1,102 +1,85 @@
-// components/BookingModal.jsx
-import React, { useState, useEffect } from "react";
-import { supabase } from "./supabase";
-console.log("Supabase URL:", supabase.restUrl);
+import React, { useEffect, useState } from "react";
+import { useFetcher } from "react-router";
 
-export default function BookingModal({ openModal, onClose, onBooked }) {
-  const places = ["4공", "10공", "지혼", "2혼"];
+export default function BookingModal({
+  openModal,
+  onClose,
+  onBooked,
+  bookedPlaces,
+  places,
+}) {
   const [selectedPlace, setSelectedPlace] = useState("");
   const [purpose, setPurpose] = useState("");
-  const [bookedPlaces, setBookedPlaces] = useState([]);
+  const fetcher = useFetcher();
+  const safePlaces = Array.isArray(places) ? places : [];
 
-  // 해당 요일+반의 예약된 장소 불러오기
-  const fetchBookedPlaces = async () => {
-    const { data, error } = await supabase.from("bookings").select("*");
-
-    if (error) {
-      console.error("예약 조회 실패:", error);
-    } else {
-      console.log("All bookings:", data);
-      setBookedPlaces(Array.isArray(data) ? data : []);
-    }
-  };
-
-  // 모달 열릴 때마다 초기화, 예약 현황 불러오기
   useEffect(() => {
     if (openModal) {
       setSelectedPlace("");
       setPurpose("");
-      fetchBookedPlaces();
     }
   }, [openModal]);
 
   useEffect(() => {
-    if (openModal) {
-      console.log("Modal slot:", openModal.cls, openModal.day);
+    if (fetcher.data?.ok) {
+      onBooked?.();
+      onClose();
     }
-  }, [openModal]);
+  }, [fetcher.data, onBooked, onClose]);
 
   if (!openModal) return null;
 
-  const handleBooking = async () => {
-    if (!selectedPlace) return alert("장소를 선택해주세요!");
-    if (!purpose) return alert("목적을 입력해주세요!");
+  const isSubmitting = fetcher.state === "submitting";
+  const hasConflict = bookedPlaces.some(
+    (b) =>
+      b.place === selectedPlace &&
+      b.class_period === openModal.classPeriod &&
+      b.day_of_week === openModal.dayOfWeek,
+  );
 
-    //  insert 직전 최신 예약 확인
-    const { data: latestBookings, error: fetchError } = await supabase
-      .from("bookings")
-      .select("cls, day, place")
-      .eq("cls", openModal.cls)
-      .eq("day", openModal.day)
-      .eq("place", selectedPlace);
+  const handleSubmit = (event) => {
+    event.preventDefault();
 
-    if (fetchError) {
-      console.error("예약 조회 실패:", fetchError);
-      return alert("예약을 확인하는 중 오류가 발생했습니다.");
+    if (!selectedPlace) {
+      alert("Select a place.");
+      return;
+    }
+    if (!purpose) {
+      alert("Enter a purpose.");
+      return;
     }
 
-    if (latestBookings.length > 0) {
-      return alert("이미 예약된 장소입니다!");
+    if (hasConflict) {
+      alert("That slot is already booked.");
+      return;
     }
 
-    // 예약 insert
-    const { error: insertError } = await supabase.from("bookings").insert([
-      {
-        cls: openModal.cls,
-        day: openModal.day,
-        place: selectedPlace,
-        purpose,
-      },
-    ]);
+    const payload = new FormData();
+    payload.set("intent", "gongang");
+    payload.set("classPeriod", openModal.classPeriod);
+    payload.set("dayOfWeek", openModal.dayOfWeek);
+    payload.set("place", selectedPlace);
+    payload.set("purpose", purpose);
 
-    if (insertError) {
-      console.error("예약 실패:", insertError);
-      alert("예약에 실패했습니다.");
-    } else {
-      alert("예약 완료!");
-      onBooked(); // Home에서 버튼 상태 갱신
-      await fetchBookedPlaces(); // insert 후 새로고침
-      onClose(); // 모달 닫기
-    }
+    fetcher.submit(payload, { method: "post" });
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-xl w-80 shadow-lg">
         <h2 className="text-lg font-bold mb-4 text-center">
-          예약: {openModal.cls} - {openModal.day}
+          Booking: {openModal.classPeriod} - {openModal.dayOfWeek}
         </h2>
 
-        {/* 장소 버튼 */}
         <div className="flex gap-2 mb-4 flex-wrap justify-center">
-          {places.map((place) => {
-            const key = `${openModal.cls}-${openModal.day}-${place}`;
+          {safePlaces.map((place) => {
+            const key = `${openModal.classPeriod}-${openModal.dayOfWeek}-${place}`;
 
             const isBooked = bookedPlaces.some(
               (b) =>
                 b.place === place &&
-                b.cls === openModal.cls &&
-                b.day === openModal.day,
+                b.class_period === openModal.classPeriod &&
+                b.day_of_week === openModal.dayOfWeek,
             );
             const isSelected = selectedPlace === place;
 
@@ -113,16 +96,15 @@ export default function BookingModal({ openModal, onClose, onBooked }) {
                 onClick={() => !isBooked && setSelectedPlace(place)}
                 disabled={isBooked}
               >
-                {place} {isBooked ? "(예약됨)" : ""}
+                {place} {isBooked ? "(Booked)" : ""}
               </button>
             );
           })}
         </div>
 
-        {/* 목적 입력 */}
         <input
           type="text"
-          placeholder="목적 입력"
+          placeholder="Purpose"
           value={purpose}
           onChange={(e) => setPurpose(e.target.value)}
           className="w-full border p-2 mb-4 rounded focus:outline-none focus:ring-2 focus:ring-green-400"
@@ -130,13 +112,14 @@ export default function BookingModal({ openModal, onClose, onBooked }) {
 
         <div className="flex justify-end gap-2">
           <button onClick={onClose} className="px-4 py-2 border rounded">
-            취소
+            Cancel
           </button>
           <button
-            onClick={handleBooking}
+            onClick={handleSubmit}
             className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+            disabled={isSubmitting}
           >
-            예약
+            {isSubmitting ? "Saving..." : "Book"}
           </button>
         </div>
       </div>
